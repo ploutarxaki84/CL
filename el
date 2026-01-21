@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Europa League - Elite Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Inter:wght@300;400;700;900&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top, #1a1a1a 0%, #0a0a0a 70%);
+      color: #f8fafc;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    .header-title {
+      font-family: 'Black Ops One', system-ui;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #fb923c 10%, #fdba74 50%, #ffffff 90%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 8px rgba(251, 146, 60, 0.4));
+    }
+
+    .glass-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(251, 146, 60, 0.35);
+      border-radius: 1rem;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      overflow: hidden;
+    }
+
+    .match-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 0.7fr;
+      align-items: center;
+      padding: 1.25rem 1rem;
+      border-bottom: 1px solid rgba(251, 146, 60, 0.25);
+    }
+
+    .match-row:last-child { border-bottom: none; }
+
+    .analysis-badge-orange {
+      font-size: 9px;
+      font-weight: 900;
+      color: #fb923c;
+      background: rgba(251, 146, 60, 0.1);
+      padding: 2px 6px;
+      border: 1px solid rgba(251, 146, 60, 0.3);
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .pred-group {
+      display: inline-flex;
+      align-items: stretch;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(251, 146, 60, 0.25);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .pred-box-inner {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 8px;
+      min-width: 38px;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .first-box { color: #ffffff; }
+    .second-box { color: #fb923c; background: rgba(251, 146, 60, 0.15); }
+    .v-divider { width: 1px; background: rgba(251, 146, 60, 0.3); margin: 4px 0; }
+
+    .team-names {
+      font-size: 10px;
+      font-weight: 700;
+      color: #e5e7eb;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 4px;
+    }
+
+    @keyframes ball-slide {
+      0% { transform: translateX(-40px) rotate(0deg); }
+      50% { transform: translateX(40px) rotate(360deg); }
+      100% { transform: translateX(-40px) rotate(720deg); }
+    }
+
+    .sliding-ball {
+      display: inline-block;
+      font-size: 1.2rem;
+      animation: ball-slide 3s infinite linear;
+      margin-top: 8px;
+      color: #fb923c;
+    }
+
+    @keyframes score-hit {
+      0%, 100% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.15); filter: brightness(1.3); box-shadow: 0 0 15px rgba(251,146,60,0.4); }
+    }
+
+    .score-display {
+      display: inline-block;
+      font-size: 16px;
+      font-weight: 900;
+      background: #ffffff;
+      color: #000000;
+      padding: 4px 14px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      animation: score-hit 2.5s infinite ease-in-out;
+      letter-spacing: 2px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      text-shadow: 0px 0px 1px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+
+<body class="p-4 md:p-8">
+<div class="max-w-2xl mx-auto">
+  <header class="text-center mb-10 overflow-hidden">
+    <div class="flex items-center justify-center gap-4 mb-2">
+      <h1 class="text-4xl md:text-5xl header-title">EUROPA LEAGUE</h1>
+    </div>
+
+    <div class="relative inline-block">
+      <p class="text-orange-300 text-sm font-black tracking-widest uppercase bg-slate-900/40 inline-block px-4 py-1 rounded-full border border-orange-500 relative z-10">
+        <i class="far fa-calendar-alt mr-2 text-orange-300"></i>22/1/2026 — LEAGUE PHASE
+
+      </p>
+      <div class="block">
+        <span class="sliding-ball">⚽</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats Grid -->
+  <div id="stats-grid" class="grid grid-cols-3 gap-3 mb-8"></div>
+
+  <!-- Matches Container -->
+  <div id="round-container" class="glass-card"></div>
+</div>
+<script>
+ const matchesData = [
+  { teams: "Βικτόρια Πλζεν - Πόρτο", p:"", g:"", n:"", score:"" },
+  { teams: "Γιουνγκ Μπόις - Λυών", p:"", g:"", n:"", score:"" },
+  { teams: "Μάλμε - Ερυθρός Αστέρας", p:"", g:"", n:"", score:"" },
+  { teams: "Μπολόνια - Σέλτικ", p:"", g:"", n:"", score:"" },
+  { teams: "Μπραν - Μίντιλαντ", p:"", g:"", n:"", score:"" },
+  { teams: "ΠΑΟΚ - Μπέτις", p:"", g:"", n:"", score:"" },
+  { teams: "Φέγενορντ - Στουρμ Γκρατς", p:"", g:"", n:"", score:"" },
+  { teams: "Φενερμπαχτσέ - Άστον Βίλα", p:"", g:"", n:"", score:"" },
+  { teams: "Φράιμπουργκ - Μακάμπι Τελ Αβίβ", p:"", g:"", n:"", score:"" },
+
+  { teams: "Θέλτα - Λιλ", p:"", g:"", n:"", score:"" },
+  { teams: "Μπράγκα - Νότινγχαμ Φόρεστ", p:"", g:"", n:"", score:"" },
+  { teams: "Νις - Γκόου Εχέντ Ιγκλς", p:"", g:"", n:"", score:"" },
+  { teams: "Ντιναμό Ζάγκρεμπ - Στεάουα Βουκουρεστίου", p:"", g:"", n:"", score:"" },
+  { teams: "Ουτρέχτη - Γκενκ", p:"", g:"", n:"", score:"" },
+  { teams: "Ρέιντζερς - Λουντογκόρετς", p:"", g:"", n:"", score:"" },
+  { teams: "Ρόμα - Στουτγκάρδη", p:"", g:"", n:"", score:"" },
+  { teams: "Red Bull Σάλτσμπουργκ - Βασιλεία", p:"", g:"", n:"", score:"" },
+  { teams: "Φερεντσβάρος - Παναθηναϊκός", p:"", g:"", n:"", score:"" }
+];
+
+  function calculateResults(scoreStr) {
+    const [h, a] = scoreStr.split('-').map(Number);
+    const signs = [];
+    if (h > a) signs.push("1");
+    else if (a > h) signs.push("2");
+    else signs.push("X");
+    signs.push(h > 0 && a > 0 ? "GG" : "NG");
+    const ou = (h + a) > 2.5 ? "OV" : "UN";
+    return { signs, ou };
+  }
+
+  function checkWin(prediction, results) {
+    if (prediction === "➖") return false;
+    const parts = prediction.split(/\s+/).filter(Boolean);
+    return parts.some(p => results.signs.includes(p) || p === results.ou);
+  }
+
+  function formatPrediction(text) {
+    if (text === "➖") return `<div class="text-slate-700 font-bold ml-2">—</div>`;
+    const parts = text.split(/\s+/).filter(Boolean);
+    if (parts.length === 1)
+      return `<div class="pred-group"><div class="pred-box-inner first-box">${parts[0]}</div></div>`;
+    return `
+      <div class="pred-group">
+        <div class="pred-box-inner first-box">${parts[0]}</div>
+        <div class="v-divider"></div>
+        <div class="pred-box-inner second-box">${parts[1]}</div>
+      </div>`;
+  }
+
+  function render() {
+    const statsGrid = document.getElementById('stats-grid');
+    const roundContainer = document.getElementById('round-container');
+
+    let stats = { p: 0, g: 0, n: 0 };
+
+    // Σπάμε τους 18 αγώνες σε 3 στήλες των 6
+    const columns = [[], [], []];
+    matchesData.forEach((m, i) => columns[Math.floor(i / 6)].push(m));
+
+    let html = `
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    `;
+
+    columns.forEach(col => {
+      html += `<div class="glass-card">`;
+      col.forEach(m => {
+        const results = calculateResults(m.score);
+        const winP = checkWin(m.p, results);
+        const winG = checkWin(m.g, results);
+
+        if (winP) stats.p++;
+        if (winG) stats.g++;
+
+        const winText = [
+          winP ? "Π" : null,
+          winG ? "Γ" : null
+        ].filter(Boolean).join('-') || "➖";
+
+        html += `
+          <div class="match-row">
+            <div>
+              <div class="team-names">${m.teams}</div>
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center text-[13px]">
+                  <span class="font-black text-orange-400 w-8">Π:</span> ${formatPrediction(m.p)}
+                </div>
+                <div class="flex items-center text-[13px]">
+                  <span class="font-black text-orange-400 w-8">Γ:</span> ${formatPrediction(m.g)}
+                </div>
+                <div class="flex items-center text-[13px]">
+                  <span class="font-black text-orange-400 w-8">Ν:</span> ${formatPrediction("➖")}
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center flex flex-col items-center">
+              <span class="score-display">${m.score}</span>
+              <div class="flex flex-wrap justify-center gap-1">
+                ${results.signs.map(r => `<span class="analysis-badge-orange">${r}</span>`).join('')}
+                <span class="analysis-badge-orange">${results.ou}</span>
+              </div>
+            </div>
+
+            <div class="text-right">
+              <span class="text-xs font-black ${winText === '➖' ? 'text-slate-700' : 'text-orange-400'}">${winText}</span>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    });
+
+    html += `</div>`;
+    roundContainer.innerHTML = html;
+
+    statsGrid.innerHTML = `
+  <div class="bg-slate-900 border-b-2 border-orange-400 p-2 rounded text-center">
+    <div class="text-[9px] text-slate-400 uppercase font-black">Παναγιώτης</div>
+    <div class="text-xl font-black text-white">
+      <span data-player-score="Π">${stats.p}</span>
+    </div>
+  </div>
+
+  <div class="bg-slate-900 border-b-2 border-orange-400 p-2 rounded text-center">
+    <div class="text-[9px] text-slate-400 uppercase font-black">Γιώργος</div>
+    <div class="text-xl font-black text-white">
+      <span data-player-score="Γ">${stats.g}</span>
+    </div>
+  </div>
+
+  <div class="bg-slate-900 border-b-2 border-orange-400 p-2 rounded text-center">
+    <div class="text-[9px] text-slate-400 uppercase font-black">Νικόλας</div>
+    <div class="text-xl font-black text-white">
+      <span data-player-score="Ν">0</span>
+    </div>
+  </div>
+`;
+  }
+
+  window.onload = render;
+</script>
+<script>
+  function detectWinner() {
+    const scoreElements = document.querySelectorAll("[data-player-score]");
+    if (!scoreElements.length) return "";
+
+    let maxScore = -Infinity;
+    let winner = "";
+
+    scoreElements.forEach(el => {
+      const player = el.getAttribute("data-player-score");
+      const value = parseInt(el.textContent.trim(), 10);
+
+      if (!isNaN(value) && value > maxScore) {
+        maxScore = value;
+        winner = player;
+      }
+    });
+
+    return winner;
+  }
+function getMaxScore() {
+  const scoreElements = document.querySelectorAll("[data-player-score]");
+  let max = 0;
+
+  scoreElements.forEach(el => {
+    const value = parseInt(el.textContent.trim(), 10);
+    if (!isNaN(value) && value > max) max = value;
+  });
+
+  return max;
+}
+  function sendWinner() {
+  const winner = detectWinner();
+  const maxScore = getMaxScore();
+
+  window.parent.postMessage({
+    type: "winner",
+    league: window.location.pathname.split("/").pop().split(".")[0].toUpperCase(),
+    winner: winner,
+    points: maxScore
+  }, "*");
+}
+
+  window.addEventListener("load", () => {
+    setTimeout(sendWinner, 300);
+  });
+</script>
+</body>
+</html>
