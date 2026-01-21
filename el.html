@@ -30,7 +30,7 @@
     }
 
     .glass-card {
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.7);
       border: 1px solid rgba(251, 146, 60, 0.35);
       border-radius: 1rem;
       backdrop-filter: blur(10px);
@@ -38,13 +38,15 @@
       overflow: hidden;
     }
 
-    .team-names {
-      font-size: 11px;
-      font-weight: 700;
-      color: #e5e7eb;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+    .match-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 0.7fr;
+      align-items: center;
+      padding: 1.25rem 1rem;
+      border-bottom: 1px solid rgba(251, 146, 60, 0.25);
     }
+
+    .match-row:last-child { border-bottom: none; }
 
     .analysis-badge-orange {
       font-size: 9px;
@@ -72,32 +74,22 @@
       align-items: center;
       justify-content: center;
       padding: 3px 8px;
-      min-width: 32px;
+      min-width: 38px;
       font-weight: 900;
-      font-size: 12px;
+      font-size: 13px;
     }
 
     .first-box { color: #ffffff; }
     .second-box { color: #fb923c; background: rgba(251, 146, 60, 0.15); }
     .v-divider { width: 1px; background: rgba(251, 146, 60, 0.3); margin: 4px 0; }
 
-    @keyframes ball-slide {
-      0% { transform: translateX(-40px) rotate(0deg); }
-      50% { transform: translateX(40px) rotate(360deg); }
-      100% { transform: translateX(-40px) rotate(720deg); }
-    }
-
-    .sliding-ball {
-      display: inline-block;
-      font-size: 1.2rem;
-      animation: ball-slide 3s infinite linear;
-      margin-top: 8px;
-      color: #fb923c;
-    }
-
-    @keyframes score-hit {
-      0%, 100% { transform: scale(1); filter: brightness(1); }
-      50% { transform: scale(1.12); filter: brightness(1.25); box-shadow: 0 0 15px rgba(251,146,60,0.4); }
+    .team-names {
+      font-size: 10px;
+      font-weight: 700;
+      color: #e5e7eb;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 4px;
     }
 
     .score-display {
@@ -108,17 +100,14 @@
       color: #000000;
       padding: 4px 14px;
       border-radius: 8px;
-      margin-bottom: 4px;
-      animation: score-hit 2.5s infinite ease-in-out;
+      margin-bottom: 8px;
       letter-spacing: 2px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-      text-shadow: 0px 0px 1px rgba(0,0,0,0.1);
     }
   </style>
 </head>
-
 <body class="p-4 md:p-8">
-<div class="max-w-5xl mx-auto">
+<div class="max-w-2xl mx-auto">
 
   <header class="text-center mb-10 overflow-hidden">
     <div class="flex items-center justify-center gap-4 mb-2">
@@ -127,7 +116,7 @@
 
     <div class="relative inline-block">
       <p class="text-orange-300 text-sm font-black tracking-widest uppercase bg-slate-900/40 inline-block px-4 py-1 rounded-full border border-orange-500 relative z-10">
-        <i class="far fa-calendar-alt mr-2 text-orange-300"></i>22/1/2026 — LEAGUE PHASE
+        <i class="far fa-calendar-alt mr-2 text-orange-300"></i>22/01/2026 — LEAGUE PHASE
       </p>
       <div class="block">
         <span class="sliding-ball">⚽</span>
@@ -135,210 +124,212 @@
     </div>
   </header>
 
+  <!-- Stats Grid -->
   <div id="stats-grid" class="grid grid-cols-3 gap-3 mb-8"></div>
+
+  <!-- Matches Container -->
   <div id="round-container"></div>
 
-<script>
-const matchesData = [
-  { teams: "Βικτόρια Πλζεν - Πόρτο", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Γιουνγκ Μπόις - Λυών", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Μάλμε - Ερυθρός Αστέρας", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Μπολόνια - Σέλτικ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Μπραν - Μίντιλαντ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "ΠΑΟΚ - Μπέτις", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Φέγενορντ - Στουρμ Γκρατς", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Φενερμπαχτσέ - Άστον Βίλα", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Φράιμπουργκ - Μακάμπι Τελ Αβίβ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+  <script>
+  const matchesData = [
+    { teams: "Βικτόρια Πλζεν - Πόρτο", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Γιουνγκ Μπόις - Λυών", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Μάλμε - Ερυθρός Αστέρας", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Μπολόνια - Σέλτικ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Μπραν - Μίντιλαντ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "ΠΑΟΚ - Μπέτις", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Φέγενορντ - Στουρμ Γκρατς", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Φενερμπαχτσέ - Άστον Βίλα", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Φράιμπουργκ - Μακάμπι Τελ Αβίβ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
 
-  { teams: "Θέλτα - Λιλ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Μπράγκα - Νότινγχαμ Φόρεστ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Νις - Γκόου Εχέντ Ιγκλς", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Ντιναμό Ζάγκρεμπ - Στεάουα Βουκουρεστίου", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Ουτρέχτη - Γκενκ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Ρέιντζερς - Λουντογκόρετς", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Ρόμα - Στουτγκάρδη", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Red Bull Σάλτσμπουργκ - Βασιλεία", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
-  { teams: "Φερεντσβάρος - Παναθηναϊκός", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" }
-];
+    { teams: "Θέλτα - Λιλ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Μπράγκα - Νότινγχαμ Φόρεστ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Νις - Γκόου Εχέντ Ιγκλς", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Ντιναμό Ζάγκρεμπ - Στεάουα Βουκουρεστίου", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Ουτρέχτη - Γκενκ", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Ρέιντζερς - Λουντογκόρετς", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Ρόμα - Στουτγκάρδη", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Red Bull Σάλτσμπουργκ - Βασιλεία", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" },
+    { teams: "Φερεντσβάρος - Παναθηναϊκός", p1:"", p2:"", g1:"", g2:"", n1:"", n2:"", score:"" }
+  ];
 
-function calculateResults(scoreStr) {
-  if (!scoreStr) return { signs: [], ou: "" };
-  const [h, a] = scoreStr.split('-').map(Number);
-  const signs = [];
+  function calculateResults(scoreStr) {
+    if (!scoreStr) return { signs: [], ou: "" };
+    const [h, a] = scoreStr.split('-').map(Number);
+    const signs = [];
 
-  if (h > a) signs.push("1");
-  else if (a > h) signs.push("2");
-  else signs.push("X");
+    if (h > a) signs.push("1");
+    else if (a > h) signs.push("2");
+    else signs.push("X");
 
-  signs.push(h > 0 && a > 0 ? "GG" : "NG");
+    signs.push(h > 0 && a > 0 ? "GG" : "NG");
 
-  const ou = (h + a) > 2.5 ? "OV" : "UN";
+    const ou = (h + a) > 2.5 ? "OV" : "UN";
 
-  return { signs, ou };
-}
-
-function checkWin(pred, results) {
-  if (!pred) return false;
-  const parts = pred.split(/\s+/).filter(Boolean);
-  return parts.some(p => results.signs.includes(p) || p === results.ou);
-}
-
-function formatPrediction(text) {
-  if (!text) return `<div class="text-slate-700 font-bold ml-2">—</div>`;
-  const parts = text.split(/\s+/).filter(Boolean);
-
-  if (parts.length === 1) {
-    return `<div class="pred-group"><div class="pred-box-inner first-box">${parts[0]}</div></div>`;
+    return { signs, ou };
   }
 
-  return `
-    <div class="pred-group">
-      <div class="pred-box-inner first-box">${parts[0]}</div>
-      <div class="v-divider"></div>
-      <div class="pred-box-inner second-box">${parts[1]}</div>
-    </div>
-  `;
-}
-  function render() {
-  const stats = { p: 0, g: 0, n: 0 };
+  function checkWin(pred, results) {
+    if (!pred) return false;
+    const parts = pred.split(/\s+/).filter(Boolean);
+    return parts.some(p => results.signs.includes(p) || p === results.ou);
+  }
 
-  const colA = matchesData.slice(0, 9);
-  const colB = matchesData.slice(9, 18);
+  function formatPrediction(text) {
+    if (!text) return `<div class="text-slate-700 font-bold ml-2">—</div>`;
+    const parts = text.split(/\s+/).filter(Boolean);
 
-  let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
+    if (parts.length === 1) {
+      return `<div class="pred-group"><div class="pred-box-inner first-box">${parts[0]}</div></div>`;
+    }
 
-  [colA, colB].forEach(column => {
-    html += `<div class="flex flex-col gap-6">`;
+    return `
+      <div class="pred-group">
+        <div class="pred-box-inner first-box">${parts[0]}</div>
+        <div class="v-divider"></div>
+        <div class="pred-box-inner second-box">${parts[1]}</div>
+      </div>
+    `;
+  }
+      function render() {
+    const stats = { p: 0, g: 0, n: 0 };
 
-    column.forEach(m => {
-      const results = calculateResults(m.score);
+    // 2 στήλες × 9 αγώνες
+    const columns = [[], []];
+    matchesData.forEach((m, i) => columns[Math.floor(i / 9)].push(m));
 
-      const winP = checkWin(m.p1, results) || checkWin(m.p2, results);
-      const winG = checkWin(m.g1, results) || checkWin(m.g2, results);
-      const winN = checkWin(m.n1, results) || checkWin(m.n2, results);
+    let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
 
-      if (winP) stats.p++;
-      if (winG) stats.g++;
-      if (winN) stats.n++;
+    columns.forEach(col => {
+      html += `<div class="glass-card">`;
 
-      const winText =
-        (winP ? "Π" : "") +
-        (winG ? "Γ" : "") +
-        (winN ? "Ν" : "") || "➖";
+      col.forEach(m => {
+        const results = calculateResults(m.score);
 
-      html += `
-        <div class="glass-card p-4 min-h-[180px] flex flex-col justify-between">
+        const winP = checkWin(m.p1, results) || checkWin(m.p2, results);
+        const winG = checkWin(m.g1, results) || checkWin(m.g2, results);
+        const winN = checkWin(m.n1, results) || checkWin(m.n2, results);
 
-          <div class="flex justify-between items-start mb-3">
-            <div class="team-names">${m.teams}</div>
-            <div class="text-xs font-black ${winText === "➖" ? "text-slate-700" : "text-orange-400"}">
-              ${winText}
+        if (winP) stats.p++;
+        if (winG) stats.g++;
+        if (winN) stats.n++;
+
+        const winText =
+          (winP ? "Π" : "") +
+          (winG ? "Γ" : "") +
+          (winN ? "Ν" : "") || "➖";
+
+        html += `
+          <div class="match-row">
+
+            <!-- Ομάδες + Προβλέψεις -->
+            <div>
+              <div class="team-names">${m.teams}</div>
+
+              <div class="flex flex-col gap-2">
+
+                <div>
+                  <div class="text-[10px] text-slate-400 font-black mb-1">Παναγιώτης</div>
+                  <div class="flex gap-2">
+                    ${formatPrediction(m.p1)}
+                    ${formatPrediction(m.p2)}
+                  </div>
+                </div>
+
+                <div>
+                  <div class="text-[10px] text-slate-400 font-black mb-1">Γιώργος</div>
+                  <div class="flex gap-2">
+                    ${formatPrediction(m.g1)}
+                    ${formatPrediction(m.g2)}
+                  </div>
+                </div>
+
+                <div>
+                  <div class="text-[10px] text-slate-400 font-black mb-1">Νικόλας</div>
+                  <div class="flex gap-2">
+                    ${formatPrediction(m.n1)}
+                    ${formatPrediction(m.n2)}
+                  </div>
+                </div>
+
+              </div>
             </div>
-          </div>
 
-          <div class="grid grid-cols-3 gap-3 items-start">
-
-            <div class="flex flex-col gap-2">
-              <div>
-                <div class="text-[10px] text-slate-400 font-black mb-1">Παναγιώτης</div>
-                <div class="flex gap-2">
-                  ${formatPrediction(m.p1)}
-                  ${formatPrediction(m.p2)}
-                </div>
-              </div>
-
-              <div>
-                <div class="text-[10px] text-slate-400 font-black mb-1">Γιώργος</div>
-                <div class="flex gap-2">
-                  ${formatPrediction(m.g1)}
-                  ${formatPrediction(m.g2)}
-                </div>
-              </div>
-
-              <div>
-                <div class="text-[10px] text-slate-400 font-black mb-1">Νικόλας</div>
-                <div class="flex gap-2">
-                  ${formatPrediction(m.n1)}
-                  ${formatPrediction(m.n2)}
-                </div>
-              </div>
-            </div>
-
-            <div class="flex flex-col items-center justify-center">
+            <!-- SCORE + ANALYSIS -->
+            <div class="text-center flex flex-col items-center">
               <span class="score-display">${m.score || "—"}</span>
-              <div class="flex flex-wrap justify-center gap-1 mt-1">
+              <div class="flex flex-wrap justify-center gap-1">
                 ${results.signs.map(r => `<span class="analysis-badge-orange">${r}</span>`).join("")}
-                ${results.ou ? `<span class="analysis-badge-orange">${results.ou}</span>` : ""}
+                <span class="analysis-badge-orange">${results.ou}</span>
               </div>
             </div>
 
-            <div class="flex items-center justify-end">
-              <!-- κενό για μελλοντικά στοιχεία ή απλά ισορροπία layout -->
+            <!-- WINNER -->
+            <div class="text-right">
+              <span class="text-xs font-black ${winText === "➖" ? "text-slate-700" : "text-orange-400"}">${winText}</span>
             </div>
 
           </div>
-        </div>
-      `;
+        `;
+      });
+
+      html += `</div>`;
     });
 
     html += `</div>`;
-  });
+    document.getElementById("round-container").innerHTML = html;
 
-  html += `</div>`;
-  document.getElementById("round-container").innerHTML = html;
+    // Στατιστικά
+    document.getElementById("stats-grid").innerHTML = `
+      <div class="bg-slate-900 border-b-2 border-orange-400 p-2 rounded text-center">
+        <div class="text-[9px] text-slate-400 uppercase font-black">Παναγιώτης</div>
+        <div class="text-xl font-black text-white" data-player="Π">${stats.p}</div>
+      </div>
 
-  document.getElementById("stats-grid").innerHTML = `
-    <div class="bg-slate-900 border-b-2 border-orange-400 p-2 rounded text-center">
-      <div class="text-[9px] text-slate-400 uppercase font-black">Παναγιώτης</div>
-      <div class="text-xl font-black text-white" data-player="Π">${stats.p}</div>
-    </div>
+      <div class="bg-slate-900 border-b-2 border-orange-400 p-2 rounded text-center">
+        <div class="text-[9px] text-slate-400 uppercase font-black">Γιώργος</div>
+        <div class="text-xl font-black text-white" data-player="Γ">${stats.g}</div>
+      </div>
 
-    <div class="bg-slate-900 border-b-2 border-orange-400 p-2 rounded text-center">
-      <div class="text-[9px] text-slate-400 uppercase font-black">Γιώργος</div>
-      <div class="text-xl font-black text-white" data-player="Γ">${stats.g}</div>
-    </div>
+      <div class="bg-slate-900 border-b-2 border-orange-400 p-2 rounded text-center">
+        <div class="text-[9px] text-slate-400 uppercase font-black">Νικόλας</div>
+        <div class="text-xl font-black text-white" data-player="Ν">${stats.n}</div>
+      </div>
+    `;
+  }
+      function detectWinner() {
+    const elements = document.querySelectorAll("[data-player]");
+    let max = -1;
+    let winner = "";
 
-    <div class="bg-slate-900 border-b-2 border-orange-400 p-2 rounded text-center">
-      <div class="text-[9px] text-slate-400 uppercase font-black">Νικόλας</div>
-      <div class="text-xl font-black text-white" data-player="Ν">${stats.n}</div>
-    </div>
-  `;
-}
+    elements.forEach(el => {
+      const value = parseInt(el.textContent.trim(), 10);
+      const player = el.getAttribute("data-player");
 
-window.onload = render;
+      if (!isNaN(value) && value > max) {
+        max = value;
+        winner = player;
+      }
+    });
 
-function detectWinner() {
-  const elements = document.querySelectorAll("[data-player]");
-  let max = -1;
-  let winner = "";
+    return { winner, points: max };
+  }
 
-  elements.forEach(el => {
-    const value = parseInt(el.textContent.trim(), 10);
-    const player = el.getAttribute("data-player");
+  function sendWinner() {
+    const result = detectWinner();
 
-    if (!isNaN(value) && value > max) {
-      max = value;
-      winner = player;
-    }
-  });
+    window.parent.postMessage({
+      type: "winner",
+      league: "EL",
+      winner: result.winner,
+      points: result.points
+    }, "*");
+  }
 
-  return { winner, points: max };
-}
-
-function sendWinner() {
-  const result = detectWinner();
-
-  window.parent.postMessage({
-    type: "winner",
-    league: "EL",
-    winner: result.winner,
-    points: result.points
-  }, "*");
-}
-
-window.addEventListener("load", () => {
-  setTimeout(sendWinner, 300);
-});
+  window.onload = () => {
+    render();
+    setTimeout(sendWinner, 300);
+  };
 </script>
 
 </div>
