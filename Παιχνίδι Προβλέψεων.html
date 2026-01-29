@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Παιχνίδι Προβλέψεων - Plou</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Inter:wght@300;400;700;900&family=Orbitron:wght@400;900&display=swap');
+    
+    body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #eee; }
+    
+    /* Φαντασμαγορικός Τίτλος με Neon Effect */
+    .header-title { 
+      font-family: 'Black Ops One', cursive; 
+      letter-spacing: 0.15em;
+      background: linear-gradient(to right, #3b82f6, #00fff2, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+    }
+    
+    .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .input-dark { background: #151515; border: 1px solid #333; border-radius: 8px; padding: 12px; color: white; outline: none; width: 100%; }
+    
+    #login-screen { position: fixed; inset: 0; background: #0a0a0a; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+    .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1001; width: 90%; max-width: 450px; }
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; }
+    
+    /* PDF Styles */
+    #pdf-template { position: absolute; left: -9999px; top: 0; width: 800px; padding: 60px; background: #000; color: white; min-height: 1120px; display: flex; flex-direction: column; }
+    .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 60px 0; min-height: 280px; flex-wrap: wrap; }
+    .podium-group { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .podium-step { position: relative; width: 160px; text-align: center; border-radius: 15px 15px 0 0; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 25px; }
+    .step-1 { height: 220px; background: linear-gradient(to top, #fbbf24, #d97706); border: 4px solid #fff; box-shadow: 0 0 30px rgba(251, 191, 36, 0.3); }
+    .step-2 { height: 160px; background: linear-gradient(to top, #94a3b8, #475569); }
+    .step-3 { height: 120px; background: linear-gradient(to top, #b45309, #78350f); }
+    .podium-rank { font-size: 50px; font-weight: 900; color: rgba(255,255,255,0.3); line-height: 1; }
+    .podium-name-label { font-weight: 900; font-size: 18px; color: #fbbf24; text-shadow: 0 2px 4px rgba(0,0,0,0.8); margin-bottom: 5px; text-align: center; max-width: 150px; word-wrap: break-word; }
+    
+    /* Animations */
+    @keyframes pulse-blue {
+      0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); transform: scale(1); }
+      70% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); transform: scale(1.05); }
+      100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); transform: scale(1); }
+    }
+    .animate-pulse-custom { animation: pulse-blue 2s infinite; }
+
+    .btn-turquoise { background: rgba(0, 255, 242, 0.05); border: 1px solid rgba(0, 255, 242, 0.2); color: #00fff2; }
+    .btn-turquoise.active { background: #00fff2; color: #000; border-color: #00fff2; box-shadow: 0 0 15px rgba(0, 255, 242, 0.6); }
+    .btn-purple { background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.2); color: #a855f7; }
+    .btn-purple.active { background: #a855f7; color: #fff; border-color: #a855f7; box-shadow: 0 0 15px rgba(168, 85, 247, 0.6); }
+  </style>
+</head>
+<body class="pb-20">
+
+  <!-- Login -->
+  <div id="login-screen">
+    <div class="text-center p-8 glass rounded-3xl max-w-sm w-full mx-4 border border-white/10 shadow-2xl">
+      <div class="flex justify-center gap-3 mb-4 text-blue-500 text-2xl">
+        <i class="fas fa-trophy"></i>
+        <i class="fas fa-futbol"></i>
+        <i class="fas fa-star"></i>
+      </div>
+      <h1 class="header-title text-4xl mb-2">ΠΡΟΒΛΕΨΕΙΣ MASTER</h1>
+      <p class="text-xs text-gray-400 font-bold tracking-[0.4em] mb-8 uppercase">Μεγας Χορηγος Plou</p>
+      <div class="space-y-4">
+        <button onclick="requestAdminAccess()" class="w-full py-4 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 rounded-2xl font-bold flex items-center justify-center gap-3 transition">
+          <i class="fas fa-user-shield text-blue-500"></i> ΔΙΑΧΕΙΡΙΣΤΗΣ
+        </button>
+        <button onclick="setMode('player')" class="w-full py-4 bg-green-600/20 hover:bg-green-600/40 border border-green-500/30 rounded-2xl font-bold flex items-center justify-center gap-3 transition">
+          <i class="fas fa-user text-green-500"></i> ΠΑΙΚΤΗΣ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF TEMPLATE -->
+  <div id="pdf-template">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-size: 30px; color: #fbbf24; margin-bottom: 10px;">
+            <i class="fas fa-trophy"></i> <i class="fas fa-star"></i> <i class="fas fa-trophy"></i>
+        </div>
+        <h1 style="font-size: 52px; color: #3b82f6; margin-bottom: 10px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase;">HALL OF FAME</h1>
+        <p style="font-size: 14px; color: #fbbf24; text-transform: uppercase; letter-spacing: 6px; margin-bottom: 20px; font-weight: 800;">Μεγας Χορηγος Plou</p>
+        <div style="border-top: 2px solid #3b82f6; border-bottom: 2px solid #3b82f6; display: inline-block; padding: 10px 40px; margin-bottom: 20px;">
+            <p style="font-size: 20px; color: #fff; text-transform: uppercase; letter-spacing: 5px; margin: 0;">ΤΕΛΙΚΑ ΑΠΟΤΕΛΕΣΜΑΤΑ</p>
+        </div>
+    </div>
+    
+    <div id="pdf-podium" class="podium-container" style="flex-grow: 1;"></div>
+
+    <div style="text-align: center; margin-top: 50px; padding: 40px; border-top: 1px solid #333; background: rgba(59, 130, 246, 0.05); border-radius: 30px;">
+        <h2 style="font-size: 28px; color: #fbbf24; margin-bottom: 10px; font-weight: 900; letter-spacing: 2px;">ΣΥΓΧΑΡΗΤΗΡΙΑ ΣΤΟΥΣ ΠΡΩΤΑΘΛΗΤΕΣ!</h2>
+        <p style="font-size: 16px; color: #888; line-height: 1.6;">
+            Η δράση δεν σταματά ποτέ. <br>
+            Ευχαριστούμε για την υποστήριξη και τη συμμετοχή σας!
+        </p>
+    </div>
+  </div>
+
+  <div id="modal-overlay" class="overlay"></div>
+
+  <!-- Success Modal -->
+  <div id="success-modal" class="modal glass p-8 rounded-3xl text-center border-green-500/50 shadow-2xl">
+    <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-check-circle text-green-500 text-3xl"></i>
+    </div>
+    <h3 class="text-xl font-black mb-2 uppercase text-white">ΕΠΙΤΥΧΙΑ!</h3>
+    <p class="text-gray-400 text-sm">Οι προβλέψεις σου αποθηκεύτηκαν. Στείλε το αρχείο JSON στον διαχειριστή.</p>
+    <button onclick="closeModal('success-modal')" class="mt-6 w-full bg-green-600 text-white py-3 rounded-xl font-bold uppercase transition">ΤΕΛΟΣ</button>
+  </div>
+
+  <!-- Warning Modal -->
+  <div id="warning-modal" class="modal glass p-8 rounded-3xl text-center border-orange-500/50 shadow-2xl">
+    <div class="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-exclamation-triangle text-orange-500 text-3xl"></i>
+    </div>
+    <h3 class="text-xl font-black mb-2 uppercase text-white">ΠΡΟΣΟΧΗ!</h3>
+    <p class="text-gray-400 text-sm">Επιτρέπονται μόνο <b>δύο (2)</b> προβλέψεις ανά αγώνα.</p>
+    <button onclick="closeModal('warning-modal')" class="mt-6 w-full bg-orange-600 text-white py-3 rounded-xl font-bold uppercase transition">ΚΑΤΑΛΑΒΑ</button>
+  </div>
+
+  <!-- Welcome Modal with Instructions -->
+  <div id="welcome-modal" class="modal glass p-8 rounded-3xl text-center border-blue-500/50 shadow-2xl">
+    <div class="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse-custom">
+        <i class="fas fa-futbol text-blue-500 text-4xl"></i>
+    </div>
+    <h3 class="text-2xl font-black mb-4 uppercase text-white">Πως παιζεται</h3>
+    <div id="welcome-msg" class="text-blue-400 font-bold mb-4 text-lg"></div>
+    <div class="text-left space-y-3 text-sm text-gray-300 mb-8 border-t border-white/10 pt-4">
+        <div class="flex gap-3 items-start">
+            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+            <span>Επίλεξε <b>έως 2</b> σημεία (1, X, 2, OV, UN, GG) για κάθε αγώνα.</span>
+        </div>
+        <div class="flex gap-3 items-start">
+            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+            <span>Κάθε σωστή πρόβλεψη σου δίνει <b>1 βαθμό</b>.</span>
+        </div>
+        <div class="flex gap-3 items-start">
+            <i class="fas fa-save text-blue-500 mt-1"></i>
+            <span>Πάτησε <b>Υποβολή</b> στο τέλος για να κατεβάσεις το αρχείο σου.</span>
+        </div>
+        <div class="flex gap-3 items-start">
+            <i class="fas fa-paper-plane text-orange-500 mt-1"></i>
+            <span>Στείλε το αρχείο JSON στον διαχειριστή για την κατάταξη.</span>
+        </div>
+    </div>
+    <button onclick="closeModal('welcome-modal')" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold uppercase shadow-lg shadow-blue-900/20 transition active:scale-95">ΞΕΚΙΝΑΜΕ</button>
+  </div>
+
+  <!-- App -->
+  <div id="app-content" class="hidden">
+    <header class="glass sticky top-0 z-50 p-4 mb-6 border-b border-white/5">
+      <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex flex-col items-center md:items-start cursor-pointer" onclick="location.reload()">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-trophy text-blue-500"></i>
+                <div class="header-title text-2xl uppercase">ΠΡΟΒΛΕΨΕΙΣ MASTER</div>
+            </div>
+            <div class="text-[10px] text-blue-400 font-black tracking-[0.4em] pl-7">ΜΕΓΑΣ ΧΟΡΗΓΟΣ PLOU</div>
+        </div>
+        <div class="flex flex-wrap gap-2 justify-center">
+          <button onclick="exportData()" id="admin-export" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-xs font-bold transition hidden">ΕΞΑΓΩΓΗ</button>
+          <label id="universal-import" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer">
+            ΕΙΣΑΓΩΓΗ <input type="file" class="hidden" onchange="importData(event)">
+          </label>
+          <button onclick="generateCelebrationPDF()" id="pdf-export" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg text-xs font-bold transition hidden">
+            <i class="fas fa-file-pdf mr-1"></i> ΛΗΨΗ PDF
+          </button>
+          <button onclick="resetBoard()" id="admin-reset" class="bg-red-900/50 hover:bg-red-700 px-4 py-2 rounded-lg text-xs font-bold transition hidden">RESET</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 pb-10">
+      <section id="admin-panel" class="hidden mb-10">
+        <div class="glass p-6 rounded-2xl border-blue-500/20">
+          <h3 class="font-bold mb-4">Νέος Αγώνας</h3>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input type="text" id="team1" placeholder="Γηπεδούχος" class="input-dark">
+            <input type="text" id="team2" placeholder="Φιλοξενούμενος" class="input-dark">
+            <select id="league" class="input-dark">
+              <option value="SUPER LEAGUE">SUPER LEAGUE</option>
+              <option value="CHAMPIONS LEAGUE">CHAMPIONS LEAGUE</option>
+              <option value="EUROPA LEAGUE">EUROPA LEAGUE</option>
+              <option value="CONFERENCE LEAGUE">CONFERENCE LEAGUE</option>
+            </select>
+            <button onclick="addMatch()" class="bg-blue-500 font-bold py-2 rounded-lg uppercase">Προσθηκη</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="match-list" class="space-y-4"></div>
+
+      <div id="player-submit-section" class="mt-10 hidden text-center p-8 glass rounded-3xl border-dashed border-2 border-blue-500/20">
+        <button onclick="completePredictions()" class="bg-gradient-to-r from-blue-600 to-blue-400 text-white text-lg font-black px-12 py-4 rounded-2xl shadow-xl uppercase transform hover:scale-105 transition">
+          <i class="fas fa-save mr-2"></i> Υποβολη & Αποθηκευση
+        </button>
+      </div>
+
+      <section id="leaderboard-section" class="mt-16 glass p-8 rounded-3xl">
+        <h3 class="header-title text-xl mb-8 text-center" style="background: none; -webkit-text-fill-color: #fbbf24; filter: none;">ΠΙΝΑΚΑΣ ΚΑΤΑΤΑΞΗΣ</h3>
+        <div id="player-scores" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const ADMIN_PASS = "G_Plou_84";
+    let mode = 'player';
+    let matches = []; 
+    let currentPlayerName = "";
+
+    function requestAdminAccess() {
+      const pass = prompt("Κωδικός Διαχειριστή:");
+      if (pass === ADMIN_PASS) setMode('admin');
+      else if (pass !== null) alert("Λάθος κωδικός!");
+    }
+
+    function setMode(newMode) {
+      mode = newMode;
+      const isAdmin = (newMode === 'admin');
+      if(!isAdmin && !currentPlayerName) {
+        const nameInput = prompt("Πληκτρολόγησε το όνομά σου:");
+        if (!nameInput) return;
+        currentPlayerName = nameInput;
+        document.getElementById('welcome-msg').innerText = `Καλώς ήρθες, ${currentPlayerName}!`;
+        showModal('welcome-modal');
+      }
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app-content').classList.remove('hidden');
+      document.getElementById('admin-panel').style.display = isAdmin ? 'block' : 'none';
+      document.getElementById('admin-export').style.display = isAdmin ? 'inline-block' : 'none';
+      document.getElementById('admin-reset').style.display = isAdmin ? 'inline-block' : 'none';
+      document.getElementById('pdf-export').style.display = isAdmin ? 'inline-block' : 'none';
+      document.getElementById('player-submit-section').style.display = !isAdmin ? 'block' : 'none';
+      renderMatches();
+    }
+
+    function addMatch() {
+      const t1 = document.getElementById('team1').value;
+      const t2 = document.getElementById('team2').value;
+      const league = document.getElementById('league').value;
+      if(!t1 || !t2) return;
+      matches.push({ id: Date.now(), league, t1, t2, score1: null, score2: null, predictions: {} });
+      renderMatches();
+      document.getElementById('team1').value = "";
+      document.getElementById('team2').value = "";
+    }
+
+    function renderMatches() {
+      const list = document.getElementById('match-list');
+      if (matches.length === 0) {
+        list.innerHTML = `<div class="text-center py-20 opacity-50 bg-white/5 rounded-3xl border border-dashed border-white/10"><p class="text-xl font-bold">Δεν υπάρχουν αγώνες</p></div>`;
+        return;
+      }
+      list.innerHTML = matches.map((m, idx) => `
+        <div class="glass p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 border border-white/5 hover:border-blue-500/20 transition">
+          <div class="flex-1 text-center md:text-left">
+            <span class="text-[10px] uppercase font-black px-2 py-1 rounded bg-blue-500/20 text-blue-400 mb-2 inline-block">${m.league}</span>
+            <div class="text-xl font-bold">${m.t1} <span class="text-gray-600 mx-2">vs</span> ${m.t2}</div>
+          </div>
+          <div class="flex gap-2 bg-black/20 p-2 rounded-xl">
+            ${mode === 'player' ? renderPlayerOptions(idx) : renderAdminScores(idx)}
+          </div>
+          ${mode === 'admin' ? `<button onclick="deleteMatch(${idx})" class="text-red-500/30 hover:text-red-500 transition px-2"><i class="fas fa-trash"></i></button>` : ''}
+        </div>
+      `).join('');
+      calculateScores();
+    }
+
+    function renderPlayerOptions(idx) {
+      const g1 = ['1', 'X', '2']; const g2 = ['OV', 'UN', 'GG'];
+      const myChoices = matches[idx].predictions[currentPlayerName] || [];
+      const btn = (o, cl) => `<button onclick="togglePrediction(${idx},'${o}')" class="w-11 h-11 rounded-lg text-sm font-black border transition-all ${cl} ${myChoices.includes(o)?'active':''}" style="font-family:'Black Ops One', cursive;">${o}</button>`;
+      return `<div class="flex gap-1 border-r border-white/10 pr-2">${g1.map(o=>btn(o,'btn-turquoise')).join('')}</div><div class="flex gap-1 pl-1">${g2.map(o=>btn(o,'btn-purple')).join('')}</div>`;
+    }
+
+    function renderAdminScores(idx) {
+      return `<input type="number" value="${matches[idx].score1??''}" class="w-14 h-11 text-center bg-black/40 rounded-lg border border-white/10 font-bold" oninput="updateScore(${idx},'score1',this.value)"><span class="text-xl font-light self-center text-gray-600">:</span><input type="number" value="${matches[idx].score2??''}" class="w-14 h-11 text-center bg-black/40 rounded-lg border border-white/10 font-bold" oninput="updateScore(${idx},'score2',this.value)">`;
+    }
+
+    function togglePrediction(idx, opt) {
+      if(!matches[idx].predictions[currentPlayerName]) matches[idx].predictions[currentPlayerName] = [];
+      const choices = matches[idx].predictions[currentPlayerName];
+      const pos = choices.indexOf(opt);
+      if(pos > -1) choices.splice(pos, 1);
+      else if(choices.length < 2) choices.push(opt);
+      else showModal('warning-modal');
+      renderMatches();
+    }
+
+    function updateScore(idx,f,v) { matches[idx][f]=v===""?null:parseInt(v); calculateScores(); }
+    function deleteMatch(idx) { if(confirm("Διαγραφή;")) { matches.splice(idx,1); renderMatches(); } }
+
+    function calculateScores() {
+      let totals = {};
+      matches.forEach(m => {
+        if(m.score1 === null || m.score2 === null) return;
+        const correct = [];
+        if(m.score1 > m.score2) correct.push('1'); else if(m.score1 < m.score2) correct.push('2'); else correct.push('X');
+        if(m.score1+m.score2 > 2.5) correct.push('OV'); else correct.push('UN');
+        if(m.score1 > 0 && m.score2 > 0) correct.push('GG');
+        for(let p in m.predictions) {
+          if(!totals[p]) totals[p] = 0;
+          const hits = m.predictions[p].filter(c => correct.includes(c));
+          if(hits.length > 0) totals[p] += 1;
+        }
+      });
+      const sorted = Object.entries(totals).sort((a,b) => b[1] - a[1]);
+      const scoresContainer = document.getElementById('player-scores');
+      scoresContainer.innerHTML = sorted.length === 0 ? '<p class="col-span-full text-center text-gray-600">Αναμονή...</p>' : sorted.map(([n,s],i)=>`<div class="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center"><span class="font-bold text-gray-400"><span class="text-xs mr-2 text-white/20">#${i+1}</span> ${n}</span><span class="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full text-sm font-black">${s} pts</span></div>`).join('');
+      return { sorted };
+    }
+
+    async function generateCelebrationPDF() {
+      const { sorted } = calculateScores();
+      if(sorted.length === 0) return alert("Δεν υπάρχουν βαθμολογίες.");
+      
+      const podium = document.getElementById('pdf-podium');
+      const scoreGroups = {};
+      sorted.forEach(([name, score]) => {
+          if(!scoreGroups[score]) scoreGroups[score] = [];
+          scoreGroups[score].push(name);
+      });
+      
+      const uniqueScores = Object.keys(scoreGroups).map(Number).sort((a,b) => b-a);
+      const top3Data = [
+          { rank: 2, score: uniqueScores[1] || 0, names: scoreGroups[uniqueScores[1]] || [], cls: 'step-2' },
+          { rank: 1, score: uniqueScores[0] || 0, names: scoreGroups[uniqueScores[0]] || [], cls: 'step-1' },
+          { rank: 3, score: uniqueScores[2] || 0, names: scoreGroups[uniqueScores[2]] || [], cls: 'step-3' }
+      ];
+
+      podium.innerHTML = top3Data.map(group => `
+          <div class="podium-group">
+            <div class="podium-name-label">${group.names.length > 0 ? group.names.join('<br>') : '-'}</div>
+            <div class="podium-step ${group.cls}">
+                <div class="podium-rank">${group.rank}</div>
+                <div style="font-weight: bold; margin-bottom: 5px;">${group.score} PTS</div>
+            </div>
+          </div>
+      `).join('');
+
+      try {
+        window.scrollTo(0, 0);
+        const canvas = await html2canvas(document.getElementById('pdf-template'), { backgroundColor: '#000', scale: 2 });
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const w = pdf.internal.pageSize.getWidth();
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, (canvas.height * w) / canvas.width);
+        pdf.save(`HALL_OF_FAME_PLOU.pdf`);
+      } catch (err) { alert("Σφάλμα PDF."); }
+    }
+
+    function completePredictions() {
+      exportData(`prognostika_${currentPlayerName}.json`);
+      showModal('success-modal');
+    }
+    function resetBoard() { if(confirm("Reset;")) { matches=[]; renderMatches(); } }
+    function exportData(fn="fm_data.json") { const blob=new Blob([JSON.stringify(matches)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=fn; a.click(); }
+    function importData(e) {
+      const file=e.target.files[0]; if(!file)return;
+      const reader=new FileReader();
+      reader.onload=function(ev){
+        try {
+          const imp=JSON.parse(ev.target.result);
+          imp.forEach(newM=>{ const idx=matches.findIndex(m=>m.id===newM.id); if(idx>-1){ matches[idx].predictions={...matches[idx].predictions, ...newM.predictions}; if(newM.score1!==null)matches[idx].score1=newM.score1; if(newM.score2!==null)matches[idx].score2=newM.score2; }else matches.push(newM); });
+          renderMatches();
+        }catch(err){alert("Σφάλμα.");}
+      }; reader.readAsText(file);
+    }
+    function showModal(id) { document.getElementById('modal-overlay').style.display='block'; document.getElementById(id).style.display='block'; }
+    function closeModal(id) { document.getElementById('modal-overlay').style.display='none'; document.getElementById(id).style.display='none'; }
+  </script>
+</body>
+</html>
+
